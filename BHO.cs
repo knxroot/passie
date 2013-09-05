@@ -168,7 +168,7 @@ namespace PassIE
 
         private void LoadKeePassHttpSettings()
         {
-            string keePassKeyFilePath = string.Format(@"{0}\PasswordBHO\keepasshttp.key", Utilities.GetLocalAppDataLowPath());
+            string keePassKeyFilePath = string.Format(@"{0}\PassIE\keepasshttp.key", Utilities.GetLocalAppDataLowPath());
             string[] lines = null;
 
             if (File.Exists(keePassKeyFilePath))
@@ -213,7 +213,7 @@ namespace PassIE
         {
             if (site != null)
             {
-                this.webBrowser = (WebBrowser)site;
+                this.webBrowser = (WebBrowser) site;
                 this.webBrowser.BeforeNavigate2 += this.OnBeforeNavigate2;
                 this.webBrowser.DocumentComplete += this.OnDocumentComplete;
             }
