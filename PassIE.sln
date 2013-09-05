@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassIE", "PassIE.csproj", "{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}"
+EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "iexplore", "%ProgramFiles%\Internet Explorer\iexplore.exe", "{38E194A3-AE1D-40F7-A209-4F66D4B7F659}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = "%ProgramFiles%\Internet Explorer\Internet Explorer\iexplore.exe"
+		RemoteMachine = 
+		StartingDirectory = "%ProgramFiles%\Internet Explorer"
+		Environment = Default
+		LaunchingEngine = fb0d4648-f776-4980-95f8-bb7f36ebc1ee
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Debug|x64.ActiveCfg = Debug|x64
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Debug|x64.Build.0 = Debug|x64
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Debug|x86.ActiveCfg = Debug|x86
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Debug|x86.Build.0 = Debug|x86
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Release|x64.ActiveCfg = Release|x64
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Release|x64.Build.0 = Release|x64
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Release|x86.ActiveCfg = Release|x86
+		{DCC74F03-C18D-44B4-AF70-A6BB9B04407E}.Release|x86.Build.0 = Release|x86
+		{38E194A3-AE1D-40F7-A209-4F66D4B7F659}.Debug|x64.ActiveCfg = Debug
+		{38E194A3-AE1D-40F7-A209-4F66D4B7F659}.Debug|x86.ActiveCfg = Debug
+		{38E194A3-AE1D-40F7-A209-4F66D4B7F659}.Release|x64.ActiveCfg = Debug
+		{38E194A3-AE1D-40F7-A209-4F66D4B7F659}.Release|x86.ActiveCfg = Debug
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
