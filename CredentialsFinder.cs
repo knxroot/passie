@@ -91,7 +91,7 @@ namespace PassIE
                     {
                         string type = htmlElement.getAttribute("type");
 
-                        if (type.ToUpper() != "TEXT")
+                        if (type.ToUpper() != "TEXT" && type.ToUpper() != "EMAIL")
                         {
                             continue;
                         }

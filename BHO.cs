@@ -158,11 +158,12 @@ namespace PassIE
         public void OnDocumentComplete(object pDisp, ref object url)
         {
             var document = webBrowser.Document as HTMLDocument;
+
             if (document != null)
             {
                 Dictionary<IHTMLElement, IHTMLElement> credentialsFields = CredentialsFinder.FindCredentials(document);
 
-                this.FillPassword(url.ToString(), credentialsFields);
+                this.FillPassword(document.url, credentialsFields);
             }
         }
 
