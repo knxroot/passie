@@ -20,26 +20,51 @@ namespace PassIE
     {
         public static string BHO_KEY_NAME = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects";
         private WebBrowser webBrowser;
+        private Settings settings;
 
-        private string keePassId;
-        private byte[] keePassKey;
+        private Settings Settings
+        {
+            get
+            {
+                if (settings == null)
+                {
+                    settings = new Settings();
+                }
+
+                return settings;
+            }
+        }
 
         private KeePassConnection keePassConnection;
-        private KeePassConnection GetKeePassConnection()
+        private KeePassConnection KeePassConnection
         {
-            if (keePassConnection == null)
+            get
             {
-                try
+                if (this.keePassConnection == null)
                 {
-                    this.LoadKeePassHttpSettings();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception caught: {0}", ex.Message);
-                }
-            }
+                    try
+                    {
+                        this.keePassConnection = new KeePassConnection(
+                            this.Settings.KeePassHost,
+                            this.Settings.KeePassPort,
+                            this.Settings.KeePassId,
+                            this.Settings.KeePassKey);
+                        this.keePassConnection.Connect();
 
-            return keePassConnection;
+                        if (this.Settings.KeePassId == null || this.Settings.KeePassKey == null)
+                        {
+                            this.keePassConnection.Associate();
+                            this.Settings.SetKeePassSettings(this.keePassConnection.Id, this.keePassConnection.Key);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Exception caught: {0}", ex.Message);
+                    }
+                }
+
+                return this.keePassConnection;
+            }
         }
 
         private Dictionary<string, Credentials> credentialsCache = new Dictionary<string, Credentials>();
@@ -118,7 +143,7 @@ namespace PassIE
         {
             if (credentialsFields.Count > 0)
             {
-                KeePassConnection keePassConnection = this.GetKeePassConnection();
+                KeePassConnection keePassConnection = this.KeePassConnection;
 
                 if (keePassConnection != null)
                 {
@@ -126,7 +151,7 @@ namespace PassIE
                     if (!credentialsCache.TryGetValue(url, out credentials))
                     {
                         Credentials[] result = keePassConnection.RetrieveCredentials(url);    
-                        if (result.Length > 0)
+                        if (result != null && result.Length > 0)
                         {
                             credentials = result[0];
                             credentialsCache[url] = credentials;
@@ -161,51 +186,17 @@ namespace PassIE
 
             if (document != null)
             {
-                Dictionary<IHTMLElement, IHTMLElement> credentialsFields = CredentialsFinder.FindCredentials(document);
-
-                this.FillPassword(document.url, credentialsFields);
-            }
-        }
-
-        private void LoadKeePassHttpSettings()
-        {
-            string keePassKeyFilePath = string.Format(@"{0}\PassIE\keepasshttp.key", Utilities.GetLocalAppDataLowPath());
-            string[] lines = null;
-
-            if (File.Exists(keePassKeyFilePath))
-            {
-                lines = File.ReadAllLines(keePassKeyFilePath);
-            }
-
-            if (lines != null && lines.Length == 2)
-            {
-                this.keePassId = lines[0];
-                this.keePassKey = Utilities.Decode64(lines[1]);
-
-                this.keePassConnection = new KeePassConnection(
-                    "localhost",
-                    19455,
-                    this.keePassId,
-                    this.keePassKey);
-                this.keePassConnection.Connect();
-            }
-            else
-            {
-                this.keePassConnection = new KeePassConnection();
-                this.keePassConnection.Connect();
-
-                this.keePassConnection.Associate();
-                lines = new string[2];
-                lines[0] = this.keePassConnection.Id;
-                lines[1] = Utilities.Encode64(this.keePassConnection.Key);
-
-                string path = Path.GetDirectoryName(keePassKeyFilePath);
-                if (!Directory.Exists(path))
+                try
                 {
-                    Directory.CreateDirectory(path);
-                }
+                    Dictionary<IHTMLElement, IHTMLElement> credentialsFields =
+                        CredentialsFinder.FindCredentials(document);
 
-                File.WriteAllLines(keePassKeyFilePath, lines);
+                    this.FillPassword(document.url, credentialsFields);
+                }
+                catch (KeePassException ex)
+                {
+                    Console.WriteLine("Exception caught: {0}", ex.Message);
+                }
             }
         }
 

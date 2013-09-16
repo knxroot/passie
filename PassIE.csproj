@@ -67,12 +67,14 @@
     <Compile Include="IObjectWithSite.cs" />
     <Compile Include="keepass\Credentials.cs" />
     <Compile Include="keepass\KeePassConnection.cs" />
+    <Compile Include="keepass\KeePassException.cs" />
     <Compile Include="keepass\Request.cs" />
     <Compile Include="keepass\Response.cs" />
     <Compile Include="keepass\ResponseEntry.cs" />
     <Compile Include="keepass\ResponseStringField.cs" />
     <Compile Include="keepass\Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="MSHTML">

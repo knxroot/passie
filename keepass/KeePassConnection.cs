@@ -13,13 +13,6 @@ using ServiceStack.Text;
 
 namespace PassIE.KeePassHttp
 {
-    public class KeePassException : Exception
-    {
-        public KeePassException() {}
-        public KeePassException(string message) : base(message) {}
-        public KeePassException(string message, Exception innerException) : base(message, innerException) {}
-    }
-
     public class KeePassConnection
     {
         public string Host { get; private set; }
@@ -36,18 +29,10 @@ namespace PassIE.KeePassHttp
             this.Hash = null;
             this.Id = id;
             this.Key = key;
-            aes = new AesManaged {Key = key};
+            this.aes = key != null ? new AesManaged {Key = key} : new AesManaged();
         }
 
-        public KeePassConnection(string host = "localhost", int port = 19455)
-        {
-            this.Host = host;
-            this.Port = port;
-            this.Hash = null;
-            this.Id = null;
-            this.Key = null;
-            aes = new AesManaged();
-        }
+        public KeePassConnection(string host = "localhost", int port = 19455) : this(host, port, null, null) {}
 
         private Uri GetKeePassUri()
         {
@@ -67,7 +52,7 @@ namespace PassIE.KeePassHttp
             }
             catch (WebException ex)
             {
-                throw new KeePassException("Error connecting to KeePass", ex);
+                throw new KeePassException("Error connecting to KeePassHttp", ex);
             }
         }
 
@@ -129,7 +114,7 @@ namespace PassIE.KeePassHttp
                 this.Id = response.Id;
                 if (!response.Success || this.Id == null)
                 {
-                    throw new Exception("Association failed");
+                    throw new Exception(string.Format("Association failed: {0}", response.Error));
                 }
             }
             else
@@ -174,7 +159,7 @@ namespace PassIE.KeePassHttp
 
                 if (!response.Success)
                 {
-                    throw new KeePassException("Error requesting credentials");
+                    throw new KeePassException(string.Format("Error requesting credentials: {0}", response.Error));
                 }
                 
                 return response.Entries.Select(entry => DecryptEntry(entry, response.Nonce)).ToArray();
