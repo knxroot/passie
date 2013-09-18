@@ -21,6 +21,8 @@ namespace PassIE
         public static string BHO_KEY_NAME = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects";
         private WebBrowser webBrowser;
         private Settings settings;
+        private Dictionary<string, Credentials> credentialsCache = new Dictionary<string, Credentials>();
+        private WebBrowserEventSink eventSink;
 
         private Settings Settings
         {
@@ -36,39 +38,35 @@ namespace PassIE
         }
 
         private KeePassConnection keePassConnection;
-        private KeePassConnection KeePassConnection
+        private KeePassConnection GetKeePassConnection()
         {
-            get
+            if (this.keePassConnection == null)
             {
-                if (this.keePassConnection == null)
+                try
                 {
-                    try
-                    {
-                        this.keePassConnection = new KeePassConnection(
-                            this.Settings.KeePassHost,
-                            this.Settings.KeePassPort,
-                            this.Settings.KeePassId,
-                            this.Settings.KeePassKey);
-                        this.keePassConnection.Connect();
+                    this.keePassConnection = new KeePassConnection(
+                        this.Settings.KeePassHost,
+                        this.Settings.KeePassPort,
+                        this.Settings.KeePassId,
+                        this.Settings.KeePassKey);
+                    this.keePassConnection.Connect();
 
-                        if (this.Settings.KeePassId == null || this.Settings.KeePassKey == null)
-                        {
-                            this.keePassConnection.Associate();
-                            this.Settings.SetKeePassSettings(this.keePassConnection.Id, this.keePassConnection.Key);
-                        }
-                    }
-                    catch (Exception ex)
+                    if (this.Settings.KeePassId == null || this.Settings.KeePassKey == null)
                     {
-                        Console.WriteLine("Exception caught: {0}", ex.Message);
+                        this.keePassConnection.Associate();
+                        this.Settings.SetKeePassSettings(this.keePassConnection.Id, this.keePassConnection.Key);
                     }
                 }
-
-                return this.keePassConnection;
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception caught: {0}", ex.Message);
+                }
             }
+
+            return this.keePassConnection;
         }
 
-        private Dictionary<string, Credentials> credentialsCache = new Dictionary<string, Credentials>();
-            
+          
         [ComRegisterFunction]
         public static void RegisterBHO(Type type)
         {
@@ -128,29 +126,27 @@ namespace PassIE
             }
         }
 
-        public void OnBeforeNavigate2(
-            object pDisp, 
-            ref object URL,
-            ref object Flags, 
-            ref object TargetFrameName, 
-            ref object PostData, 
-            ref object Headers, 
-            ref bool Cancel)
+        private void TryFillCredentials()
         {
+            HTMLDocument document = this.webBrowser.Document as HTMLDocument;
+            if (document != null)
+            {
+                this.TryFillCredentials(document);
+            }
         }
 
         private void FillPassword(string url, Dictionary<IHTMLElement, IHTMLElement> credentialsFields)
         {
             if (credentialsFields.Count > 0)
             {
-                KeePassConnection keePassConnection = this.KeePassConnection;
+                KeePassConnection keePassConnection = this.GetKeePassConnection();
 
                 if (keePassConnection != null)
                 {
                     Credentials credentials = null;
                     if (!credentialsCache.TryGetValue(url, out credentials))
                     {
-                        Credentials[] result = keePassConnection.RetrieveCredentials(url);    
+                        Credentials[] result = keePassConnection.RetrieveCredentials(url);
                         if (result != null && result.Length > 0)
                         {
                             credentials = result[0];
@@ -180,47 +176,49 @@ namespace PassIE
             }
         }
 
-        public void OnDocumentComplete(object pDisp, ref object url)
+        private void TryFillCredentials(HTMLDocument document)
         {
-            var document = webBrowser.Document as HTMLDocument;
-
-            if (document != null)
+            try
             {
-                try
-                {
-                    Dictionary<IHTMLElement, IHTMLElement> credentialsFields =
-                        CredentialsFinder.FindCredentials(document);
+                Dictionary<IHTMLElement, IHTMLElement> credentialsFields =
+                    CredentialsFinder.FindCredentials(document);
 
-                    this.FillPassword(document.url, credentialsFields);
-                }
-                catch (KeePassException ex)
-                {
-                    Console.WriteLine("Exception caught: {0}", ex.Message);
-                }
+                this.FillPassword(document.url, credentialsFields);
+            }
+            catch (KeePassException ex)
+            {
+                Console.WriteLine("Exception caught: {0}", ex.Message);
             }
         }
 
         #region IObjectWithSite  Members
         public int SetSite(object site)
         {
-            if (site != null)
+            try
             {
-                this.webBrowser = (WebBrowser) site;
-                this.webBrowser.BeforeNavigate2 += this.OnBeforeNavigate2;
-                this.webBrowser.DocumentComplete += this.OnDocumentComplete;
+                this.webBrowser = site as WebBrowser;
+
+                if (this.webBrowser != null)
+                {
+                    eventSink = new WebBrowserEventSink(this.TryFillCredentials, this.TryFillCredentials);
+                    eventSink.Connect(this.webBrowser);
+                }
+                else
+                {
+                    eventSink.Disconnect(this.webBrowser);
+                }
             }
-            else
+            catch (COMException ex)
             {
-                this.webBrowser.BeforeNavigate2 -= this.OnBeforeNavigate2;
-                this.webBrowser.DocumentComplete -= this.OnDocumentComplete;
-                this.webBrowser = null;
+                Console.WriteLine("Exception caught: {0}", ex.Message);
             }
+
             return 0;
         }
 
         public int GetSite(ref Guid guid, out IntPtr ppvSite)
         {
-            IntPtr iUnknownForObject = Marshal.GetIUnknownForObject(webBrowser);
+            IntPtr iUnknownForObject = Marshal.GetIUnknownForObject(this.webBrowser);
             int hr = Marshal.QueryInterface(iUnknownForObject, ref guid, out ppvSite);
 
             Marshal.Release(iUnknownForObject);
