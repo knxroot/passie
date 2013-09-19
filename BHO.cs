@@ -10,6 +10,7 @@ using PassIE.KeePassHttp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WebBrowser = SHDocVw.WebBrowser;
 
@@ -20,22 +21,10 @@ namespace PassIE
     {
         public static string BHO_KEY_NAME = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects";
         private WebBrowser webBrowser;
-        private Settings settings;
         private Dictionary<string, Credentials> credentialsCache = new Dictionary<string, Credentials>();
         private WebBrowserEventSink eventSink;
 
-        private Settings Settings
-        {
-            get
-            {
-                if (settings == null)
-                {
-                    settings = new Settings();
-                }
-
-                return settings;
-            }
-        }
+        private SettingsManager SettingsManager = new SettingsManager();
 
         private KeePassConnection keePassConnection;
         private KeePassConnection GetKeePassConnection()
@@ -44,17 +33,21 @@ namespace PassIE
             {
                 try
                 {
+                    Settings settings = this.SettingsManager.Load();
+
                     this.keePassConnection = new KeePassConnection(
-                        this.Settings.KeePassHost,
-                        this.Settings.KeePassPort,
-                        this.Settings.KeePassId,
-                        this.Settings.KeePassKey);
+                        settings.KeePassHost,
+                        settings.KeePassPort,
+                        settings.KeePassId,
+                        settings.KeePassKey);
                     this.keePassConnection.Connect();
 
-                    if (this.Settings.KeePassId == null || this.Settings.KeePassKey == null)
+                    if (settings.KeePassId == null || settings.KeePassKey == null)
                     {
                         this.keePassConnection.Associate();
-                        this.Settings.SetKeePassSettings(this.keePassConnection.Id, this.keePassConnection.Key);
+                        settings.KeePassId = this.keePassConnection.Id;
+                        settings.KeePassKey = this.keePassConnection.Key;
+                        this.SettingsManager.Save(settings);
                     }
                 }
                 catch (Exception ex)
@@ -65,8 +58,16 @@ namespace PassIE
 
             return this.keePassConnection;
         }
-
-          
+        
+        public BHO()
+        { 
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(MyResolveEventHandler);
+        }
+        private static Assembly MyResolveEventHandler(object sender, ResolveEventArgs args)
+        {
+            return typeof(BHO).Assembly;
+        }
+                  
         [ComRegisterFunction]
         public static void RegisterBHO(Type type)
         {
