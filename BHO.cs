@@ -9,7 +9,6 @@ using mshtml;
 using PassIE.KeePassHttp;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using WebBrowser = SHDocVw.WebBrowser;
@@ -34,6 +33,7 @@ namespace PassIE
                 try
                 {
                     Settings settings = this.SettingsManager.Load();
+                    Logger.Instance.LogInfo("Loaded settings");
 
                     this.keePassConnection = new KeePassConnection(
                         settings.KeePassHost,
@@ -41,6 +41,8 @@ namespace PassIE
                         settings.KeePassId,
                         settings.KeePassKey);
                     this.keePassConnection.Connect();
+
+                    Logger.Instance.LogInfo("Connected to KeePassHttp");
 
                     if (settings.KeePassId == null || settings.KeePassKey == null)
                     {
@@ -52,7 +54,7 @@ namespace PassIE
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Exception caught: {0}", ex.Message);
+                    Logger.Instance.LogError("Exception caught: {0}", ex.Message);
                 }
             }
 
@@ -188,7 +190,7 @@ namespace PassIE
             }
             catch (KeePassException ex)
             {
-                Console.WriteLine("Exception caught: {0}", ex.Message);
+                Logger.Instance.LogError("Exception caught: {0}", ex.Message);
             }
         }
 
@@ -211,7 +213,7 @@ namespace PassIE
             }
             catch (COMException ex)
             {
-                Console.WriteLine("Exception caught: {0}", ex.Message);
+                Logger.Instance.LogError("Exception caught: {0}", ex.Message);
             }
 
             return 0;

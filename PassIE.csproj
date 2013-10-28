@@ -74,6 +74,7 @@
     <Compile Include="keepass\ResponseEntry.cs" />
     <Compile Include="keepass\ResponseStringField.cs" />
     <Compile Include="keepass\Utilities.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsManager.cs" />

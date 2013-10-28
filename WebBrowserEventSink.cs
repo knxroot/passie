@@ -22,6 +22,9 @@ namespace PassIE
         {
             this.onRefreshCallback = refreshCallback;
             this.onDocumentComplete = documentCompleteCallback;
+            this.isRefresh = false;
+            this.pageCounter = 0;
+            this.objCounter = 0;
         }
 
         public void Connect(WebBrowser webBrowser)

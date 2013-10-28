@@ -119,7 +119,7 @@ namespace PassIE.KeePassHttp
             }
             else
             {
-                throw new KeePassException("KeePass disconnected.");
+                throw new KeePassException("KeePassHttp disconnected.");
             }
         }
 
@@ -159,7 +159,7 @@ namespace PassIE.KeePassHttp
 
                 if (!response.Success)
                 {
-                    throw new KeePassException(string.Format("Error requesting credentials: {0}", response.Error));
+                    throw new KeePassException(string.Format("Error requesting credentials: {0}", response.Error == null ? "unknown error from KeePassHttp" : response.Error));
                 }
                 
                 return response.Entries.Select(entry => DecryptEntry(entry, response.Nonce)).ToArray();

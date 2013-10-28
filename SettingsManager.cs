@@ -23,7 +23,7 @@ namespace PassIE
 
         public SettingsManager()
         {
-            this.SettingsFilePath = string.Format(@"{0}\PassIE\keepasshttp.key", Utilities.GetLocalAppDataLowPath());
+            this.SettingsFilePath = Path.Combine(Utilities.GetLocalAppDataLowPath(), "PassIE", "keepasshttp.key");
         }
 
         private IFormatter GetFormatter()
@@ -35,7 +35,10 @@ namespace PassIE
         {
             if (File.Exists(this.SettingsFilePath))
             {
-                using (MemoryStream stream = new MemoryStream(ProtectedData.Unprotect(File.ReadAllBytes(this.SettingsFilePath), null, DataProtectionScope.CurrentUser))) 
+                using (var stream = new MemoryStream(ProtectedData.Unprotect(
+                    File.ReadAllBytes(this.SettingsFilePath), 
+                    null, 
+                    DataProtectionScope.CurrentUser))) 
                 {
                     return (Settings)this.GetFormatter().Deserialize(stream);                                       
                 }
@@ -57,10 +60,13 @@ namespace PassIE
                 Directory.CreateDirectory(path);
             }
 
-            using (MemoryStream stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             {
                 this.GetFormatter().Serialize(stream, settings);
-                File.WriteAllBytes(this.SettingsFilePath, ProtectedData.Protect(stream.GetBuffer(), null, DataProtectionScope.CurrentUser));
+                File.WriteAllBytes(this.SettingsFilePath, ProtectedData.Protect(
+                    stream.GetBuffer(), 
+                    null, 
+                    DataProtectionScope.CurrentUser));
             }
         }
     }
